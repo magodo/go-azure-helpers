@@ -59,3 +59,5 @@ require (
 )
 
 go 1.19
+
+replace github.com/manicminer/hamilton => ../hamilton

@@ -54,6 +54,17 @@ type Builder struct {
 	IDTokenRequestURL   string
 	IDTokenRequestToken string
 
+	// Custom Auth
+	SupportsCustomCommandAuth bool
+	IsSP                      bool
+	// CustomCommand is the exec form of command used to retrieve the access token.
+	// Each command argument will be rendered as a Go template with an input object that has following fields:
+	// - .Endpoint: The token endpoint
+	// - .TenantID: The tenant ID. For auxiliary tokens, it is set as one of each auxiliary token.
+	//
+	// E.g. []string{"az", "account", "get-access-token", "--resource={{.Endpoint}}"}"}
+	CustomCommand []string
+
 	// Beta opt-in for Microsoft Graph
 	UseMicrosoftGraph bool
 }
@@ -80,6 +91,7 @@ func (b Builder) Build() (*Config, error) {
 		servicePrincipalClientSecretAuth{},
 		oidcAuth{},
 		managedServiceIdentityAuth{},
+		customCommandAuth{},
 		azureCliTokenMultiTenantAuth{},
 		azureCliTokenAuth{},
 	}
