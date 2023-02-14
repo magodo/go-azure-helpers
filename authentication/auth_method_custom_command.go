@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/go-multierror"
 	authWrapper "github.com/manicminer/hamilton-autorest/auth"
-	"github.com/manicminer/hamilton/auth"
 	"github.com/manicminer/hamilton/environments"
 )
 
@@ -21,11 +20,8 @@ type customCommandAuth struct {
 
 	// Fields from builder
 	// required
-	subscriptionId string
-	tenantId       string
-	tenantOnly     bool
+	tenantId string
 	// optional
-	environment        string
 	auxiliaryTenantIds []string
 }
 
@@ -34,10 +30,7 @@ func (a customCommandAuth) build(b Builder) (authMethod, error) {
 		isSP:    b.IsSP,
 		command: b.CustomCommand,
 
-		subscriptionId:     b.SubscriptionID,
 		tenantId:           b.TenantID,
-		tenantOnly:         b.TenantOnly,
-		environment:        b.Environment,
 		auxiliaryTenantIds: b.AuxiliaryTenantIDs,
 	}
 
@@ -45,7 +38,7 @@ func (a customCommandAuth) build(b Builder) (authMethod, error) {
 }
 
 func (a customCommandAuth) isApplicable(b Builder) bool {
-	return b.SupportsCustomCommandAuth
+	return b.SupportsCustomCommandAuth && len(b.CustomCommand) != 0
 }
 
 func (a customCommandAuth) getADALToken(_ context.Context, _ autorest.Sender, oauthConfig *OAuthConfig, endpoint string) (autorest.Authorizer, error) {
@@ -53,7 +46,7 @@ func (a customCommandAuth) getADALToken(_ context.Context, _ autorest.Sender, oa
 }
 
 func (a customCommandAuth) getMSALToken(ctx context.Context, api environments.Api, _ autorest.Sender, _ *OAuthConfig, _ string) (autorest.Authorizer, error) {
-	config, err := auth.NewCustomCommandConfig(api, a.tenantId, a.auxiliaryTenantIds, "", a.command)
+	config, err := NewCustomCommandConfig(api, a.tenantId, a.auxiliaryTenantIds, "", a.command)
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +54,12 @@ func (a customCommandAuth) getMSALToken(ctx context.Context, api environments.Ap
 }
 
 func (a customCommandAuth) name() string {
-	return "Obtaining a token from the custom  command"
+	return "Obtaining a token from the custom command"
 }
 
 func (a customCommandAuth) populateConfig(c *Config) error {
-	// TODO
-	// c.GetAuthenticatedObjectID = func(ctx context.Context) (*string, error) {
-	// }
-
+	c.AuthenticatedAsAServicePrincipal = a.isSP
+	c.GetAuthenticatedObjectID = buildServicePrincipalObjectIDFunc(c)
 	return nil
 }
 
@@ -83,9 +74,6 @@ func (a customCommandAuth) validate() error {
 	}
 
 	// Validate the required fields from builder
-	if !a.tenantOnly && a.subscriptionId == "" {
-		err = multierror.Append(err, fmt.Errorf(fmtErrorMessage, "Subscription ID"))
-	}
 	if a.tenantId == "" {
 		err = multierror.Append(err, fmt.Errorf(fmtErrorMessage, "Tenant ID"))
 	}

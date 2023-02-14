@@ -11,6 +11,7 @@ require (
 	github.com/manicminer/hamilton v0.55.0
 	github.com/manicminer/hamilton-autorest v0.3.0
 	golang.org/x/crypto v0.5.0
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 )
 
 require (
@@ -51,7 +52,6 @@ require (
 	github.com/vmihailenco/tagparser v0.1.1 // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
 	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -59,5 +59,3 @@ require (
 )
 
 go 1.19
-
-replace github.com/manicminer/hamilton => ../hamilton
